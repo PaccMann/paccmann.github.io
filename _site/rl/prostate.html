@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="data:image/vnd.microsoft.icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA25g0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERAAAAAAAAAREAAAAAAAABEQAAAAAAAAERAAAAAAAAARERERAAAAABEREREAAAAAEREREQAAAAAREAAAAAAAABEQAAAAAAAAEREREQAAAAARERERAAAAABEREREAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAPH/AADx/wAA8f8AAPH/AADwDwAA8A8AAPAPAADx/wAA8f8AAPAPAADwDwAA8A8AAP//AAD//wAA" />
+    <title></title>
+    <script src="https://unpkg.com/lore-engine@1.1.10/dist/lore.min.js"></script>
+    <script src="https://unpkg.com/smiles-drawer@1.1.22/dist/smiles-drawer.min.js"></script>
+    <link 
+      rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.css" 
+      integrity="sha256-piqEf7Ap7CMps8krDQsSOTZgF+MU/0MPyPW2enj5I40=" 
+      crossorigin="anonymous" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:400,600"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+        height: 100%;
+        user-select: none;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      #lore {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      #title {
+        position: absolute;
+        z-index: 9999;
+        pointer-events: none;
+        text-height: 1;
+        opacity: 0.0;
+        transition: opacity 0.5s ease-in;
+        
+          padding-bottom: 20px;
+        
+          font-size: 1.0em;
+        
+          color: #888888;
+        
+          font-family: 'Open Sans';
+        
+      }
+
+      #x-axis {
+        position: absolute;
+        z-index: 9999;
+        pointer-events: none;
+        text-height: 1;
+        opacity: 0.0;
+        transition: opacity 0.5s ease-in;
+        
+          padding-top: 20px;
+        
+          font-size: 0.7em;
+        
+          color: #888888;
+        
+          font-family: 'Open Sans';
+        
+      }
+
+      #y-axis {
+        position: absolute;
+        z-index: 9999;
+        pointer-events: none;
+        text-height: 1;
+        transition: opacity 0.5s ease-in;
+        
+          padding-bottom: 20px;
+        
+          font-size: 0.7em;
+        
+          color: #888888;
+        
+          font-family: 'Open Sans';
+        
+          transform: rotate(-90deg);
+        
+      }
+
+      #tip {
+        position: absolute;
+        z-index: 9999;
+        padding: 5px;
+        font-family: 'Open Sans';
+        background-color: rgba(255, 255, 255, 1.0);
+        border-radius: 2px;
+        border-left: 5px solid #000;
+        pointer-events: none;
+        opacity: 0.0;
+        transition: opacity 0.1s ease-out;
+        filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 1.0));
+      }
+
+      #tip.show {
+        opacity: 1.0;
+        transition: opacity 0.1s ease-out;
+      }
+
+      #tip-text {
+        position: relative;
+        max-width: 250px;
+        font-size: 0.8em;
+        font-weight: bold;
+        white-space: normal;
+        line-break: normal;
+      }
+
+      #hover-indicator {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        border: 1px solid #fff;
+        background-color: rgba(255, 255, 255, 0.25);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      #hover-indicator.show {
+        display: block !important
+      }
+
+      .selected-indicator {
+        position: absolute;
+        z-index: 999;
+        pointer-events: none;
+      }
+
+      .selected-indicator .crosshair-x {
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        height: 2px;
+        width: 100%;
+        margin: auto;
+        
+          background-color: #fff;
+        
+      }
+
+      .selected-indicator .crosshair-y {
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        width: 2px;
+        height: 100%;
+        margin: auto;
+        
+          background-color: #fff;
+        
+      }
+
+      #legend {
+        position: absolute;
+        z-index: 9998;
+        
+          bottom: 10px;
+        
+          right: 10px;
+        
+          padding: 10px;
+        
+          border: 1px solid #262626;
+        
+          border-radius: 2px;
+        
+          background-color: #111111;
+        
+          filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+        
+          color: #eeeeee;
+        
+          font-family: 'Open Sans';
+        
+      }
+
+      #legend .container {
+        display: flex;
+        flex: auto;
+        align-items: flex-start;
+        
+        flex-direction: column;
+        
+      }
+
+      #legend .legend-section {
+        width: 100%;
+      }
+
+      #legend .legend-section:not(:first-child) {
+        
+      }
+
+      #legend h2 {
+        font-size: 1em;
+        font-weight: 600;
+        padding-top: 0;
+        margin-top: 0;
+        margin-bottom: 5px;
+        text-align: center;
+        max-width: 250px;
+        white-space: normal;
+      }
+
+      #legend h3 {
+        font-size: 0.8em;
+        margin-top: 10px;
+        margin-bottom: 0px;
+        max-width: 250px;
+        white-space: normal;
+      }
+
+      #legend select {
+        width: 100%;
+        margin-bottom: 5px;
+        background: transparent;
+        color: #fff;
+        border-radius: 2px;
+        font-size: 0.75em;
+      }
+
+      #legend select option {
+        background: #000;
+      }
+
+      #legend .legend-element, #legend .legend-element-range {
+        position: relative;
+        display: flex;
+        flex: auto;
+        align-items: flex-start;
+        padding-bottom: 2px;
+        padding-top: 2px;
+      }
+
+      #legend .legend-element {
+        align-items: flex-start;
+      }
+
+      #legend .legend-element-range {
+        flex-direction: column;
+      }
+
+      #legend .color-box {
+        
+          width: 15px;
+        
+          height: 15px;
+        
+          border: solid 0px;
+        
+      }
+
+      #legend .color-stripe {
+        
+          width: 15px;
+        
+          height: 1px;
+        
+          border: solid 0px;
+        
+      }
+
+      #legend .legend-label {
+        height: 15px;
+        font-size: 0.7em;
+        padding-left: 5px;
+      }
+
+      #legend .legend-label.max {
+        position: absolute;
+        top: 0px;
+        margin-left: 15px;
+      }
+
+      #legend .legend-label.min {
+        position: absolute;
+        bottom: 2px;
+        margin-left: 15px;
+      }
+
+      #selected {
+        position: absolute;
+        display: none;
+        z-index: 9998;
+        width: 250px;
+        
+          bottom: 10px;
+        
+          left: 10px;
+        
+          padding: 0px;
+        
+          border: 1px solid #262626;
+        
+          border-radius: 2px;
+        
+          background-color: #111111;
+        
+          filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+        
+          color: #eeeeee;
+        
+          font-family: 'Open Sans';
+        
+      }
+
+      #selected #selected-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 5px 10px;
+        border-bottom: 1px solid #262626;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      #selected #selected-controls * {
+        display: inline-block;
+      }
+
+      #selected #selected-controls #selected-title {
+        flex-grow: 1;
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #aaa;
+      }
+
+      #selected #selected-controls a {
+        margin: 0px 2px;
+        font-size: 1.5em;
+        color: #fff;
+        opacity: 0.75;
+        transition: 0.2s;
+      }
+
+      #selected #selected-controls a:hover {
+        opacity: 1.0;
+      }
+
+      #selected #selected-container {
+        padding: 10px;
+        font-size: 0.8em;
+      }
+
+      #selected #selected-container img {
+        margin-left: -10px;
+      }
+
+      #selected #selected-container .label {
+        font-weight: bold;
+        color: #aaa;
+        font-size: 0.7em;
+      }
+
+      #selected #selected-container .label:not(:first-child) {
+        margin-top: 2px;
+      }
+
+      #selected #selected-container .content {
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #selected #selected-container .content a {
+        text-decoration: none;
+        color: #3498db;
+      }
+
+      #controls {
+        position: absolute;
+        z-index: 9998;
+        
+          top: 10px;
+        
+          right: 10px;
+        
+          padding: 2px;
+        
+          border: 1px solid #262626;
+        
+          border-radius: 2px;
+        
+          background-color: #111111;
+        
+          filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+        
+          color: #eeeeee;
+        
+          font-family: 'Open Sans';
+        
+      }
+
+      #controls a {
+        display: inline-block;
+        padding: 5px 10px;
+        font-size: 1.2em;
+        color: #fff;
+        opacity: 0.75;
+        transition: 0.2s;
+      }
+
+      #controls a:hover {
+        opacity: 1.0;
+      }
+
+      #controls #more-controls {
+        display: inline-block;
+      }
+
+      #impress {
+        position: absolute;
+        z-index: 9999;
+        top: 10px;
+        left: 10px;
+        font-size: 0.7em;
+        color: #eee;
+      }
+
+      #impress a {
+        color: #3498db;
+        text-decoration: none;
+      }
+
+      #smiles-canvas {
+        position: absolute;
+        z-index: 9999;
+        left: -999px;
+        top: -999px;
+        width: 250px;
+        height: 250px;
+      }
+
+      .show {
+        opacity: 1.0 !important;
+      }
+
+      .hide {
+        display: none !important;
+      }
+
+      @media only screen and (max-width: 600px) {
+        #selected {
+          position: absolute;
+          display: none;
+          z-index: 9998;
+          width: 125px;
+          opacity: 0.8;
+          background-filter: blur(10px);
+        }
+
+        #selected img {
+          width: 125px;
+        }
+
+        #tip {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="smiles-canvas" data-bind="smilesCanvas"></canvas>
+    
+    
+    
+    
+      <div id="impress">made with <a href="http://tmap.gdb.tools" target="_blank">tmap</a><br />and <a href="https://github.com/reymond-group/faerun-python" target="_blank">faerun</a></div>
+    
+
+    <div id="tip" data-bind="tip">
+      <div id="tip-text" data-bind="tipText"></div>
+    </div>
+    <div id="selected" data-bind="selected">
+      <div id="selected-controls" data-bind="selectedControls">
+        <a id="selected-toggle" data-bind="selectedToggle" href="#">
+          <i class="fas fa-toggle-on"></i>
+        </a>
+        <span>&nbsp;&nbsp;</span>
+        <span id="selected-title" data-bind="selectedTitle"></span>
+        <span>&nbsp;&nbsp;</span>
+        <span id="selected-current" data-bind="selectedCurrent" data-bind="selectedCurrent">0</span><span> / </span><span id="selected-total" data-bind="selectedTotal">0</span>
+        <span>&nbsp;&nbsp;</span>
+        <a id="selected-prev" data-bind="selectedPrev" href="#">
+          <i class="fas fa-angle-left"></i>
+        </a>
+        <span>&nbsp;</span>
+        <a id="selected-next" data-bind="selectedNext" href="#">
+          <i class="fas fa-angle-right"></i>
+        </a>
+      </div>
+      <div id="selected-container" data-bind="selectedContainer">
+      </div>
+    </div>
+    <div id="controls" data-bind="controls">
+      <div id="more-controls" data-bind="moreControls" class="hide">
+        <a id="search" data-bind="search" href="#">
+          <i class="fas fa-search"></i>
+        </a>
+        <a id="export" data-bind="export" href="#">
+          <i class="fas fa-camera"></i>
+        </a>
+      </div>
+      <a id="show-controls" data-bind="showControls" href="#">
+        <i class="fas fa-bars"></i>
+      </a>
+    </div>
+    <div id="hover-indicator" data-bind="hoverIndicator"></div>
+    <canvas id="lore"></canvas>
+
+    
+    <script>
+      const data = {
+molecules: {
+x: [112.146,82.13,632.146,669.028,601.464,624.601,609.926,513.142,532.167,592.939,552.596,720.453,72.249,257.489,426.884,0.0,109.395,522.427,519.461,750.0,295.699,269.953,19.26,444.863,491.549,481.742,444.987,531.122,530.082,149.744,12.204,293.674,577.459,155.09,310.96,568.29,744.81,725.465,57.467,669.59,106.335,135.6,705.971,627.04],
+y: [423.221,458.245,66.551,217.332,229.019,0.0,37.828,75.233,110.722,90.839,155.881,208.205,392.419,331.145,303.562,342.308,389.999,242.734,417.252,684.2,353.018,382.779,409.211,369.499,346.286,313.052,335.425,452.195,209.431,371.237,319.002,317.434,488.928,407.044,386.615,427.587,750.0,715.068,343.91,612.946,352.854,335.622,667.828,553.526],
+z: [375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0],
+labels: ['CC(C(=O)O)C1CCC2C3CC=C4CC(C5(C)CCC(=O)C(C)(C)C5CC(=O)O)CCC4(O)C3CCC12C__No link available__CC(C(=O)O)C1CCC2C3CC=C4CC(C5(C)CCC(=O)C(C)(C)C5CC(=O)O)CCC4(O)C3CCC12C','CC(C)C1=CC2C3C(C)C(=O)C4(O)CCC(OC(=O)C5CCOCC5)C4(C)CCC3C2(C)CCC1=O__No link available__CC(C)C1=CC2C3C(C)C(=O)C4(O)CCC(OC(=O)C5CCOCC5)C4(C)CCC3C2(C)CCC1=O','COC1CC(C2CC(C3C(O)CCC4CC(OCC(=O)NCCN5CCOCC5)CCC43)=NN2)CC(OC)C1OC__No link available__COC1CC(C2CC(C3C(O)CCC4CC(OCC(=O)NCCN5CCOCC5)CCC43)=NN2)CC(OC)C1OC','CC(C)C1CC(O)CC(C)C1C(=O)OCC(=O)NC1CCC(S(C)(=O)=O)CC1__No link available__CC(C)C1CC(O)CC(C)C1C(=O)OCC(=O)NC1CCC(S(C)(=O)=O)CC1','CC(C)C1CC(O)CC(C)C1C(=O)OCC(=O)NC1CCC(CC1)S(C)(=O)=O__No link available__CC(C)C1CC(O)CC(C)C1C(=O)OCC(=O)NC1CCC(CC1)S(C)(=O)=O','Cc1[nH]c(SCC2CCCC(C(C)C)C2)nc(=O)c1CC(=O)NC1CCCCC1O__No link available__Cc1[nH]c(SCC2CCCC(C(C)C)C2)nc(=O)c1CC(=O)NC1CCCCC1O','CC(C)C1CCCC(CSC2=NC(=O)C(CC(=O)NC3CCCCC3O)=C(C)N2)C1__No link available__CC(C)C1CCCC(CSC2=NC(=O)C(CC(=O)NC3CCCCC3O)=C(C)N2)C1','COC1CCCCC1COC1CCCCC1C(=O)NNC(=O)C1CCCO1__No link available__COC1CCCCC1COC1CCCCC1C(=O)NNC(=O)C1CCCO1','COC1CCCCC1COC1CCCCC1C(=O)NNC(=O)C1CCCO1__No link available__COC1CCCCC1COC1CCCCC1C(=O)NNC(=O)C1CCCO1','CC1CCCCC1C1CC(=O)NC(=O)N1CC(=O)NC1CCCC2CCCCC21__No link available__CC1CCCCC1C1CC(=O)NC(=O)N1CC(=O)NC1CCCC2CCCCC21','CC(=O)OC1CCC(C2CCCCC2C(=O)NC2CCCC3CCCCC32)CN1__No link available__CC(=O)OC1CCC(C2CCCCC2C(=O)NC2CCCC3CCCCC32)CN1','COC1CCC(CC1C)C1SC2CCC(NC(=O)CCC=CCCCN(CC3CC=CCC3)CC3CCCCC3)CC2C1C1CCC(CC1)S(C)(=O)=O__No link available__COC1CCC(CC1C)C1SC2CCC(NC(=O)CCC=CCCCN(CC3CC=CCC3)CC3CCCCC3)CC2C1C1CCC(CC1)S(C)(=O)=O','SCC1=CC(C=C(CC=CC(F)(F)F)C1OP(O)(O)=O)C(O)=O__No link available__SCC1=CC(C=C(CC=CC(F)(F)F)C1OP(O)(O)=O)C(O)=O','CCCC[C@@H](C)\C=C(C)\C=C(/C)C(=O)NC1=C[C@@](O)(\C=C\C=C\C=C\C(=O)NC2C(=O)CCC2=O)[C@@H]2O[C@@H]2C1=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=manumycin A">manumycin A</a>__CCCC[C@@H](C)\C=C(C)\C=C(/C)C(=O)NC1=C[C@@](O)(\C=C\C=C\C=C\C(=O)NC2C(=O)CCC2=O)[C@@H]2O[C@@H]2C1=O','NC(=O)c1ccc(cc1)-c1nc(c([nH]1)-c1ccccn1)-c1ccc2OCOc2c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=SB-431542">SB-431542</a>__NC(=O)c1ccc(cc1)-c1nc(c([nH]1)-c1ccccn1)-c1ccc2OCOc2c1','CC(C)C[C@H](NC(=O)[C@@H](C[C@@H](O)[C@H](Cc1ccccc1)NC(=O)OC(C)(C)C)Cc1ccccc1)C(=O)N[C@@H](Cc1ccccc1)C(N)=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=L-685458">L-685458</a>__CC(C)C[C@H](NC(=O)[C@@H](C[C@@H](O)[C@H](Cc1ccccc1)NC(=O)OC(C)(C)C)Cc1ccccc1)C(=O)N[C@@H](Cc1ccccc1)C(N)=O','COc1ccc(C2=NC(C(N2C(=O)N2CCNC(=O)C2)c2ccc(Cl)cc2)c2ccc(Cl)cc2)c(OC(C)C)c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=nutlin-3">nutlin-3</a>__COc1ccc(C2=NC(C(N2C(=O)N2CCNC(=O)C2)c2ccc(Cl)cc2)c2ccc(Cl)cc2)c(OC(C)C)c1','O=C(NC1CC1)c1cc(on1)-c1cccs1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=neuronal differentiation inducer III">neuronal differentiation inducer III</a>__O=C(NC1CC1)c1cc(on1)-c1cccs1','Cc1ccc(cc1)S(=O)(=O)OCC(=O)Nc1ccc(C(O)=O)c(O)c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=NSC 74859">NSC 74859</a>__Cc1ccc(cc1)S(=O)(=O)OCC(=O)Nc1ccc(C(O)=O)c(O)c1','Oc1cccc(c1)-c1nc(N2CCOCC2)c2oc3ncccc3c2n1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=PI-103">PI-103</a>__Oc1cccc(c1)-c1nc(N2CCOCC2)c2oc3ncccc3c2n1','CCOC(=O)\C=C/n1nnc(n1)-c1cccc(Cl)c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=Compound 7d-cis">Compound 7d-cis</a>__CCOC(=O)\C=C/n1nnc(n1)-c1cccc(Cl)c1','Cn1cncc1[C@](N)(c1ccc(Cl)cc1)c1ccc2n(C)c(=O)cc(-c3cccc(Cl)c3)c2c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=tipifarnib-P1">tipifarnib-P1</a>__Cn1cncc1[C@](N)(c1ccc(Cl)cc1)c1ccc2n(C)c(=O)cc(-c3cccc(Cl)c3)c2c1','CCCCCCC(=O)CCCCCC\C=C\C[C@H](O)[C@@H](O)C(N)(CO)C(O)=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=myriocin">myriocin</a>__CCCCCCC(=O)CCCCCC\C=C\C[C@H](O)[C@@H](O)C(N)(CO)C(O)=O','Oc1ccc(C[C@@H]2N3[C@H](CN(Cc4cccc5ccccc45)C2=O)N(CCC3=O)C(=O)NCc2ccccc2)cc1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD1812">BRD1812</a>__Oc1ccc(C[C@@H]2N3[C@H](CN(Cc4cccc5ccccc45)C2=O)N(CCC3=O)C(=O)NCc2ccccc2)cc1','CC1=NN(C(=O)C\1=C\c1ccc(o1)-c1cc(C)c(C)cc1[N+]([O-])=O)c1ccc(cc1)C(O)=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD8958">BRD8958</a>__CC1=NN(C(=O)C\1=C\c1ccc(o1)-c1cc(C)c(C)cc1[N+]([O-])=O)c1ccc(cc1)C(O)=O','CONC(=O)[C@H]1[C@@H](O)[C@@]2(O)c3c(O[C@]2([C@@H]1c1ccccc1)c1ccc(OC)cc1)cc(OC)cc3OC__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=CR-1-31B">CR-1-31B</a>__CONC(=O)[C@H]1[C@@H](O)[C@@]2(O)c3c(O[C@]2([C@@H]1c1ccccc1)c1ccc(OC)cc1)cc(OC)cc3OC','OC(=O)c1ccc(NCc2nc3cc4ccccc4cc3[nH]2)cc1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-K71781559">BRD-K71781559</a>__OC(=O)c1ccc(NCc2nc3cc4ccccc4cc3[nH]2)cc1','CC(C)NC(=O)Nc1ccc2O[C@@H](CN(C)S(C)(=O)=O)[C@@H](C)CN([C@H](C)CO)C(=O)Cc2c1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-K16147474">BRD-K16147474</a>__CC(C)NC(=O)Nc1ccc2O[C@@H](CN(C)S(C)(=O)=O)[C@@H](C)CN([C@H](C)CO)C(=O)Cc2c1','CN1C2N(CCc3c2[nH]c2ccccc32)C(=O)c2ccccc12__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=isoevodiamine">isoevodiamine</a>__CN1C2N(CCc3c2[nH]c2ccccc32)C(=O)c2ccccc12','CCC(C)SSc1ncc[nH]1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=PX-12">PX-12</a>__CCC(C)SSc1ncc[nH]1','OC[C@H](Cc1ccccc1)Nc1nc(Oc2ccc3CCCc3c2)nc2n(Cc3ccc(cc3)-c3ccccc3)cnc12__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=QS-11">QS-11</a>__OC[C@H](Cc1ccccc1)Nc1nc(Oc2ccc3CCCc3c2)nc2n(Cc3ccc(cc3)-c3ccccc3)cnc12','COc1cc2ncn(-c3cc(OCc4ccccc4S(C)(=O)=O)c(s3)C#N)c2cc1OC__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=CAY10576">CAY10576</a>__COc1cc2ncn(-c3cc(OCc4ccccc4S(C)(=O)=O)c(s3)C#N)c2cc1OC','C[C@@H](Nc1ccccc1C(O)=O)c1cc(C)cn2c1nc(cc2=O)N1CCOCC1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=AZD6482">AZD6482</a>__C[C@@H](Nc1ccccc1C(O)=O)c1cc(C)cn2c1nc(cc2=O)N1CCOCC1','Cc1n[nH]c2NC3=C([C@@H](c12)c1ccccc1)C(=O)CC(C)(C)C3__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-K48477130">BRD-K48477130</a>__Cc1n[nH]c2NC3=C([C@@H](c12)c1ccccc1)C(=O)CC(C)(C)C3','CN(CCc1cc(Br)c(OCCCNc2ncnc3n(C)cnc23)c(Br)c1)C(=O)c1ccc(C)cc1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-K97651142">BRD-K97651142</a>__CN(CCc1cc(Br)c(OCCCNc2ncnc3n(C)cnc23)c(Br)c1)C(=O)c1ccc(C)cc1','OC(=O)CC[C@H]1CC[C@@](CC1)(c1cc(F)ccc1F)S(=O)(=O)c1ccc(Cl)cc1.Cc1sc-2c(c1C)C(=N[C@@H](CC(=O)OC(C)(C)C)c1nnc(C)n-21)c1ccc(Cl)cc1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=JQ-1:MK-0752 (1:1 mol/mol)">JQ-1:MK-0752 (1:1 mol/mol)</a>__OC(=O)CC[C@H]1CC[C@@](CC1)(c1cc(F)ccc1F)S(=O)(=O)c1ccc(Cl)cc1.Cc1sc-2c(c1C)C(=N[C@@H](CC(=O)OC(C)(C)C)c1nnc(C)n-21)c1ccc(Cl)cc1','CC(C)N(CCCNC(=O)Nc1ccc(cc1)C(C)(C)C)C[C@H]1O[C@H]([C@H](O)[C@@H]1O)n1ccc2c(N)ncnc12.CC1(C)CCC(=C(CN2CCN(CC2)c2ccc(cc2)C(=O)NS(=O)(=O)c2ccc(N[C@H](CCN3CCOCC3)CSc3ccccc3)c(c2)S(=O)(=O)C(F)(F)F)C1)c1ccc(Cl)cc1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-A02303741:navitoclax (2:1 mol/mol)">BRD-A02303741:navitoclax (2:1 mol/mol)</a>__CC(C)N(CCCNC(=O)Nc1ccc(cc1)C(C)(C)C)C[C@H]1O[C@H]([C@H](O)[C@@H]1O)n1ccc2c(N)ncnc12.CC1(C)CCC(=C(CN2CCN(CC2)c2ccc(cc2)C(=O)NS(=O)(=O)c2ccc(N[C@H](CCN3CCOCC3)CSc3ccccc3)c(c2)S(=O)(=O)C(F)(F)F)C1)c1ccc(Cl)cc1','Cc1ccc(cc1)-n1nc(cc1NC(=O)Nc1ccc(OCCN2CCOCC2)c2ccccc12)C(C)(C)C__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BIRB-796">BIRB-796</a>__Cc1ccc(cc1)-n1nc(cc1NC(=O)Nc1ccc(OCCN2CCOCC2)c2ccccc12)C(C)(C)C','CC(C)CNc1ccnc(NCc2csc(n2)-c2ccccc2)n1__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=KHS101">KHS101</a>__CC(C)CNc1ccnc(NCc2csc(n2)-c2ccccc2)n1','Cc1nc2c(cc(cc2n1Cc1cccc(c1C)C(F)(F)F)N1CCOCC1)C(O)=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=GSK2636771">GSK2636771</a>__Cc1nc2c(cc(cc2n1Cc1cccc(c1C)C(F)(F)F)N1CCOCC1)C(O)=O','C[C@@H](NC(=O)c1ncnc(N)c1Cl)c1ncc(s1)C(=O)Nc1cc(c(Cl)cn1)C(F)(F)F__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=MLN2480">MLN2480</a>__C[C@@H](NC(=O)c1ncnc(N)c1Cl)c1ncc(s1)C(=O)Nc1cc(c(Cl)cn1)C(F)(F)F','CC(C)n1ncc2c(cc(Br)cc12)C(=O)NCc1c(C)cc(C)[nH]c1=O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=BRD-K51831558">BRD-K51831558</a>__CC(C)n1ncc2c(cc(Br)cc12)C(=O)NCc1c(C)cc(C)[nH]c1=O','C1COCCN1C2=NC(=NC3=C2OC4=C3C=CC=N4)C5=CC(=CC=C5)O__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=PI-103">PI-103</a>__C1COCCN1C2=NC(=NC3=C2OC4=C3C=CC=N4)C5=CC(=CC=C5)O','CC1=CN2C(=O)C=C(N=C2C(=C1)C(C)NC3=CC=CC=C3C(=O)O)N4CCOCC4__<a href="https://pubchem.ncbi.nlm.nih.gov/#query=AZD6482">AZD6482</a>__CC1=CN2C(=O)C=C(N=C2C(=C1)C(C)NC3=CC=CC=C3C(=O)O)N4CCOCC4'],
+colors: [
+{
+r: [46,46,46,46,46,46,46,46,46,46,46,46,46,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231,231],
+g: [204,204,204,204,204,204,204,204,204,204,204,204,204,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76,76],
+b: [113,113,113,113,113,113,113,113,113,113,113,113,113,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60],
+},
+{
+r: [52,31,61,52,52,39,39,155,155,226,178,70,64,72,31,71,47,253,66,33,40,55,72,49,58,42,33,32,194,210,70,44,96,241,69,72,68,66,117,78,35,132,33,96],
+g: [96,158,77,182,182,128,128,217,217,228,221,8,70,33,152,17,108,231,190,166,174,90,41,102,83,119,142,146,223,226,48,113,202,229,56,26,1,63,208,195,136,212,166,202],
+b: [141,137,138,121,121,142,142,60,60,24,45,92,136,115,139,100,142,37,113,133,128,140,121,142,139,142,141,140,35,27,126,142,96,29,130,108,84,133,84,107,142,75,133,96],
+},
+{
+r: [117,132,72,84,84,37,37,170,170,31,40,55,32,32,70,31,42,210,253,60,241,70,66,49,47,103,194,71,56,226,66,40,64,147,72,72,68,69,35,44,52,33,60,47],
+g: [208,212,26,197,197,133,133,220,220,152,174,90,163,146,48,158,119,226,231,80,229,8,190,102,180,204,223,17,185,228,63,125,70,215,41,33,1,56,169,113,96,142,80,108],
+b: [84,75,108,104,104,142,142,50,50,139,128,140,134,140,126,137,142,27,37,139,29,92,113,142,124,92,35,100,119,24,133,142,136,65,121,115,84,130,131,142,141,141,139,142],
+},
+{
+r: [147,78,58,72,72,31,31,70,70,40,40,226,64,35,33,132,194,68,72,52,70,117,61,103,90,35,38,66,55,71,210,56,46,42,178,241,253,162,32,47,66,31,49,46],
+g: [215,195,83,37,37,149,149,52,52,125,174,228,70,169,142,212,223,1,26,96,8,208,77,204,200,136,130,63,90,17,226,185,111,119,221,229,231,218,163,180,190,158,102,111],
+b: [65,107,139,118,118,139,139,128,128,142,128,24,136,131,141,75,35,84,108,141,92,84,138,92,100,142,142,133,140,100,27,119,142,142,45,29,37,55,134,124,113,137,142,142],
+},
+{
+r: [103,56,162,34,34,30,30,57,57,47,44,226,61,132,52,210,178,70,64,69,71,47,49,117,32,78,72,40,72,68,147,35,42,72,194,241,253,90,70,32,66,38,66,40],
+g: [204,185,218,139,139,155,155,86,86,108,113,228,77,212,96,226,221,8,70,56,17,180,102,208,163,195,41,174,26,1,215,169,119,33,223,229,231,200,48,146,190,130,63,125],
+b: [92,119,55,141,141,138,138,140,140,142,142,24,138,75,141,27,45,92,136,130,100,124,142,84,134,107,121,128,108,84,65,131,142,115,35,29,37,100,126,140,113,142,133,142],
+},
+]},
+prostate: {
+x: [112.146,82.13,112.146,149.744,632.146,592.939,669.028,601.464,669.028,720.453,601.464,522.427,624.601,609.926,609.926,592.939,513.142,532.167,532.167,552.596,592.939,552.596,552.596,522.427,72.249,149.744,72.249,19.26,257.489,295.699,426.884,444.987,0.0,57.467,109.395,149.744,522.427,444.987,522.427,530.082,519.461,444.987,519.461,577.459,519.461,531.122,750.0,705.971,295.699,444.987,295.699,269.953,295.699,149.744,295.699,293.674,444.863,444.987,491.549,444.987,481.742,444.987,149.744,57.467,149.744,155.09,149.744,135.6,149.744,106.335,12.204,57.467,577.459,627.04,310.96,295.699,568.29,519.461,744.81,725.465,725.465,705.971,669.59,627.04,669.59,705.971],
+y: [423.221,458.245,423.221,371.237,66.551,90.839,217.332,229.019,217.332,208.205,229.019,242.734,0.0,37.828,37.828,90.839,75.233,110.722,110.722,155.881,90.839,155.881,155.881,242.734,392.419,371.237,392.419,409.211,331.145,353.018,303.562,335.425,342.308,343.91,389.999,371.237,242.734,335.425,242.734,209.431,417.252,335.425,417.252,488.928,417.252,452.195,684.2,667.828,353.018,335.425,353.018,382.779,353.018,371.237,353.018,317.434,369.499,335.425,346.286,335.425,313.052,335.425,371.237,343.91,371.237,407.044,371.237,335.622,371.237,352.854,319.002,343.91,488.928,553.526,386.615,353.018,427.587,417.252,750.0,715.068,715.068,667.828,612.946,553.526,612.946,667.828],
+z: [375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0,375.0],
+},
+};
+
+    </script>
+    
+    <script>
+      let smilesDrawer = new SmilesDrawer.Drawer({
+        width: 250 / window.devicePixelRatio,
+        height: 250 / window.devicePixelRatio,
+        experimental: true
+      });
+
+      class Faerun {
+        constructor() {
+          this.body = document.getElementsByTagName('body')[0];
+
+          this.selectedItems = [];
+          this.selectedIndicators = [];
+          this.selectedCurrent = [];
+          this.scatterMeta = [{"categorical": [true, false, false, false, false], "fog_intensity": 0.0, "has_legend": true, "interactive": true, "is_range": [false, true, true, true, true], "label_index": [0, 0, 0, 0, 0], "legend": [[[[0.9058823529411765, 0.2980392156862745, 0.23529411764705882, 1.0], "GDSC/CCLE"], [[0.1803921568627451, 0.8, 0.44313725490196076, 1.0], "Generated"]], [[[0.993248, 0.906157, 0.143936, 1.0], "0.3181818181818182"], [[0.974417, 0.90359, 0.130215, 1.0], "0.3181818181818182"], [[0.945636, 0.899815, 0.112838, 1.0], "0.3181818181818182"], [[0.926106, 0.89733, 0.104071, 1.0], "0.5681818181818182"], [[0.89632, 0.893616, 0.096335, 1.0], "0.5681818181818182"], [[0.866013, 0.889868, 0.095953, 1.0], "0.25"], [[0.845561, 0.887322, 0.099702, 1.0], "0.25"], [[0.814576, 0.883393, 0.110347, 1.0], "0.6704545454545454"], [[0.79376, 0.880678, 0.120005, 1.0], "0.6704545454545454"], [[0.762373, 0.876424, 0.137064, 1.0], "0.6704545454545454"], [[0.730889, 0.871916, 0.156029, 1.0], "0.6704545454545454"], [[0.709898, 0.868751, 0.169257, 1.0], "0.6704545454545454"], [[0.678489, 0.863742, 0.189503, 1.0], "0.4431818181818182"], [[0.657642, 0.860219, 0.203082, 1.0], "0.4431818181818182"], [[0.626579, 0.854645, 0.223353, 1.0], "0.4431818181818182"], [[0.595839, 0.848717, 0.243329, 1.0], "0.4431818181818182"], [[0.575563, 0.844566, 0.256415, 1.0], "0.8522727272727273"], [[0.545524, 0.838039, 0.275626, 1.0], "0.8522727272727273"], [[0.515992, 0.831158, 0.294279, 1.0], "0.8522727272727273"], [[0.496615, 0.826376, 0.306377, 1.0], "0.8522727272727273"], [[0.468053, 0.818921, 0.323998, 1.0], "0.8522727272727273"], [[0.449368, 0.813768, 0.335384, 1.0], "0.9545454545454546"], [[0.421908, 0.805774, 0.35191, 1.0], "0.9545454545454546"], [[0.395174, 0.797475, 0.367757, 1.0], "0.8863636363636364"], [[0.377779, 0.791781, 0.377939, 1.0], "0.8863636363636364"], [[0.35236, 0.783011, 0.392636, 1.0], "0.045454545454545456"], [[0.335885, 0.777018, 0.402049, 1.0], "0.045454545454545456"], [[0.311925, 0.767822, 0.415586, 1.0], "0.045454545454545456"], [[0.288921, 0.758394, 0.428426, 1.0], "0.22727272727272727"], [[0.274149, 0.751988, 0.436601, 1.0], "0.22727272727272727"], [[0.252899, 0.742211, 0.448284, 1.0], "0.11363636363636363"], [[0.239374, 0.735588, 0.455688, 1.0], "0.11363636363636363"], [[0.220124, 0.725509, 0.466226, 1.0], "0.5454545454545454"], [[0.202219, 0.715272, 0.476084, 1.0], "0.5454545454545454"], [[0.19109, 0.708366, 0.482284, 1.0], "0.5454545454545454"], [[0.175707, 0.6979, 0.491033, 1.0], "0.06818181818181818"], [[0.162016, 0.687316, 0.499129, 1.0], "0.06818181818181818"], [[0.153894, 0.680203, 0.504172, 1.0], "0.36363636363636365"], [[0.143303, 0.669459, 0.511215, 1.0], "0.36363636363636365"], [[0.137339, 0.662252, 0.515571, 1.0], "1.0"], [[0.130067, 0.651384, 0.521608, 1.0], "1.0"], [[0.12478, 0.640461, 0.527068, 1.0], "0.7045454545454546"], [[0.122312, 0.633153, 0.530398, 1.0], "0.7045454545454546"], [[0.120081, 0.622161, 0.534946, 1.0], "0.7045454545454546"], [[0.119483, 0.614817, 0.537692, 1.0], "0.6022727272727273"], [[0.119738, 0.603785, 0.5414, 1.0], "0.6022727272727273"], [[0.121148, 0.592739, 0.544641, 1.0], "0.6363636363636364"], [[0.122606, 0.585371, 0.546557, 1.0], "0.6363636363636364"], [[0.125394, 0.574318, 0.549086, 1.0], "0.29545454545454547"], [[0.127568, 0.566949, 0.550556, 1.0], "0.29545454545454547"], [[0.131172, 0.555899, 0.552459, 1.0], "0.13636363636363635"], [[0.135066, 0.544853, 0.554029, 1.0], "0.13636363636363635"], [[0.13777, 0.537492, 0.554906, 1.0], "0.13636363636363635"], [[0.141935, 0.526453, 0.555991, 1.0], "0.3409090909090909"], [[0.14618, 0.515413, 0.556823, 1.0], "0.3409090909090909"], [[0.149039, 0.508051, 0.55725, 1.0], "0.2727272727272727"], [[0.153364, 0.497, 0.557724, 1.0], "0.2727272727272727"], [[0.15627, 0.489624, 0.557936, 1.0], "0.4090909090909091"], [[0.160665, 0.47854, 0.558115, 1.0], "0.4090909090909091"], [[0.165117, 0.467423, 0.558141, 1.0], "0.4090909090909091"], [[0.168126, 0.459988, 0.558082, 1.0], "0.5"], [[0.172719, 0.448791, 0.557885, 1.0], "0.5"], [[0.175841, 0.44129, 0.557685, 1.0], "0.5227272727272727"], [[0.180629, 0.429975, 0.557282, 1.0], "0.5227272727272727"], [[0.185556, 0.41857, 0.556753, 1.0], "0.9090909090909091"], [[0.188923, 0.41091, 0.556326, 1.0], "0.9090909090909091"], [[0.1941, 0.399323, 0.555565, 1.0], "0.9318181818181818"], [[0.19943, 0.387607, 0.554642, 1.0], "0.9318181818181818"], [[0.203063, 0.379716, 0.553925, 1.0], "0.9318181818181818"], [[0.208623, 0.367752, 0.552675, 1.0], "0.1590909090909091"], [[0.212395, 0.359683, 0.55171, 1.0], "0.1590909090909091"], [[0.21813, 0.347432, 0.550038, 1.0], "0.38636363636363635"], [[0.223925, 0.334994, 0.548053, 1.0], "0.38636363636363635"], [[0.227802, 0.326594, 0.546532, 1.0], "0.7613636363636364"], [[0.233603, 0.313828, 0.543914, 1.0], "0.7613636363636364"], [[0.237441, 0.305202, 0.541921, 1.0], "0.9772727272727273"], [[0.243113, 0.292092, 0.538516, 1.0], "0.9772727272727273"], [[0.248629, 0.278775, 0.534556, 1.0], "0.9772727272727273"], [[0.252194, 0.269783, 0.531579, 1.0], "0.18181818181818182"], [[0.257322, 0.25613, 0.526563, 1.0], "0.18181818181818182"], [[0.260571, 0.246922, 0.522828, 1.0], "0.09090909090909091"], [[0.265145, 0.232956, 0.516599, 1.0], "0.09090909090909091"], [[0.269308, 0.218818, 0.509577, 1.0], "0.022727272727272728"], [[0.271828, 0.209303, 0.504434, 1.0], "0.022727272727272728"], [[0.275191, 0.194905, 0.496005, 1.0], "0.022727272727272728"], [[0.278012, 0.180367, 0.486697, 1.0], "0.20454545454545456"], [[0.279574, 0.170599, 0.479997, 1.0], "0.20454545454545456"], [[0.281412, 0.155834, 0.469201, 1.0], "0.7954545454545454"], [[0.28229, 0.145912, 0.46151, 1.0], "0.7954545454545454"], [[0.283072, 0.130895, 0.449241, 1.0], "0.7272727272727273"], [[0.283197, 0.11568, 0.436115, 1.0], "0.7272727272727273"], [[0.28291, 0.105393, 0.426902, 1.0], "0.4772727272727273"], [[0.281924, 0.089666, 0.412415, 1.0], "0.4772727272727273"], [[0.280894, 0.078907, 0.402329, 1.0], "0.4772727272727273"], [[0.278791, 0.062145, 0.386592, 1.0], "0.8181818181818182"], [[0.276022, 0.044167, 0.370164, 1.0], "0.8181818181818182"], [[0.273809, 0.031497, 0.358853, 1.0], "0.6022727272727273"], [[0.269944, 0.014625, 0.341379, 1.0], "0.6022727272727273"], [[0.267004, 0.004874, 0.329415, 1.0], "0.7613636363636364"]], [[[0.993248, 0.906157, 0.143936, 1.0], "0.7954545454545454"], [[0.974417, 0.90359, 0.130215, 1.0], "0.7954545454545454"], [[0.945636, 0.899815, 0.112838, 1.0], "0.7954545454545454"], [[0.926106, 0.89733, 0.104071, 1.0], "0.8181818181818182"], [[0.89632, 0.893616, 0.096335, 1.0], "0.8181818181818182"], [[0.866013, 0.889868, 0.095953, 1.0], "0.09090909090909091"], [[0.845561, 0.887322, 0.099702, 1.0], "0.09090909090909091"], [[0.814576, 0.883393, 0.110347, 1.0], "0.7386363636363636"], [[0.79376, 0.880678, 0.120005, 1.0], "0.7386363636363636"], [[0.762373, 0.876424, 0.137064, 1.0], "0.7386363636363636"], [[0.730889, 0.871916, 0.156029, 1.0], "0.7386363636363636"], [[0.709898, 0.868751, 0.169257, 1.0], "0.7386363636363636"], [[0.678489, 0.863742, 0.189503, 1.0], "0.4659090909090909"], [[0.657642, 0.860219, 0.203082, 1.0], "0.4659090909090909"], [[0.626579, 0.854645, 0.223353, 1.0], "0.4659090909090909"], [[0.595839, 0.848717, 0.243329, 1.0], "0.4659090909090909"], [[0.575563, 0.844566, 0.256415, 1.0], "0.875"], [[0.545524, 0.838039, 0.275626, 1.0], "0.875"], [[0.515992, 0.831158, 0.294279, 1.0], "0.875"], [[0.496615, 0.826376, 0.306377, 1.0], "0.875"], [[0.468053, 0.818921, 0.323998, 1.0], "0.875"], [[0.449368, 0.813768, 0.335384, 1.0], "0.5454545454545454"], [[0.421908, 0.805774, 0.35191, 1.0], "0.5454545454545454"], [[0.395174, 0.797475, 0.367757, 1.0], "0.6363636363636364"], [[0.377779, 0.791781, 0.377939, 1.0], "0.6363636363636364"], [[0.35236, 0.783011, 0.392636, 1.0], "0.29545454545454547"], [[0.335885, 0.777018, 0.402049, 1.0], "0.29545454545454547"], [[0.311925, 0.767822, 0.415586, 1.0], "0.29545454545454547"], [[0.288921, 0.758394, 0.428426, 1.0], "0.5909090909090909"], [[0.274149, 0.751988, 0.436601, 1.0], "0.5909090909090909"], [[0.252899, 0.742211, 0.448284, 1.0], "0.5227272727272727"], [[0.239374, 0.735588, 0.455688, 1.0], "0.5227272727272727"], [[0.220124, 0.725509, 0.466226, 1.0], "0.1590909090909091"], [[0.202219, 0.715272, 0.476084, 1.0], "0.1590909090909091"], [[0.19109, 0.708366, 0.482284, 1.0], "0.1590909090909091"], [[0.175707, 0.6979, 0.491033, 1.0], "0.5681818181818182"], [[0.162016, 0.687316, 0.499129, 1.0], "0.5681818181818182"], [[0.153894, 0.680203, 0.504172, 1.0], "0.4090909090909091"], [[0.143303, 0.669459, 0.511215, 1.0], "0.4090909090909091"], [[0.137339, 0.662252, 0.515571, 1.0], "0.9318181818181818"], [[0.130067, 0.651384, 0.521608, 1.0], "0.9318181818181818"], [[0.12478, 0.640461, 0.527068, 1.0], "1.0"], [[0.122312, 0.633153, 0.530398, 1.0], "1.0"], [[0.120081, 0.622161, 0.534946, 1.0], "1.0"], [[0.119483, 0.614817, 0.537692, 1.0], "0.26136363636363635"], [[0.119738, 0.603785, 0.5414, 1.0], "0.26136363636363635"], [[0.121148, 0.592739, 0.544641, 1.0], "0.9772727272727273"], [[0.122606, 0.585371, 0.546557, 1.0], "0.9772727272727273"], [[0.125394, 0.574318, 0.549086, 1.0], "0.045454545454545456"], [[0.127568, 0.566949, 0.550556, 1.0], "0.045454545454545456"], [[0.131172, 0.555899, 0.552459, 1.0], "0.7045454545454546"], [[0.135066, 0.544853, 0.554029, 1.0], "0.7045454545454546"], [[0.13777, 0.537492, 0.554906, 1.0], "0.7045454545454546"], [[0.141935, 0.526453, 0.555991, 1.0], "0.3409090909090909"], [[0.14618, 0.515413, 0.556823, 1.0], "0.3409090909090909"], [[0.149039, 0.508051, 0.55725, 1.0], "0.6590909090909091"], [[0.153364, 0.497, 0.557724, 1.0], "0.6590909090909091"], [[0.15627, 0.489624, 0.557936, 1.0], "0.7727272727272727"], [[0.160665, 0.47854, 0.558115, 1.0], "0.7727272727272727"], [[0.165117, 0.467423, 0.558141, 1.0], "0.7727272727272727"], [[0.168126, 0.459988, 0.558082, 1.0], "0.9090909090909091"], [[0.172719, 0.448791, 0.557885, 1.0], "0.9090909090909091"], [[0.175841, 0.44129, 0.557685, 1.0], "0.06818181818181818"], [[0.180629, 0.429975, 0.557282, 1.0], "0.06818181818181818"], [[0.185556, 0.41857, 0.556753, 1.0], "0.6818181818181818"], [[0.188923, 0.41091, 0.556326, 1.0], "0.6818181818181818"], [[0.1941, 0.399323, 0.555565, 1.0], "0.9545454545454546"], [[0.19943, 0.387607, 0.554642, 1.0], "0.9545454545454546"], [[0.203063, 0.379716, 0.553925, 1.0], "0.9545454545454546"], [[0.208623, 0.367752, 0.552675, 1.0], "0.20454545454545456"], [[0.212395, 0.359683, 0.55171, 1.0], "0.20454545454545456"], [[0.21813, 0.347432, 0.550038, 1.0], "0.4318181818181818"], [[0.223925, 0.334994, 0.548053, 1.0], "0.4318181818181818"], [[0.227802, 0.326594, 0.546532, 1.0], "0.22727272727272727"], [[0.233603, 0.313828, 0.543914, 1.0], "0.22727272727272727"], [[0.237441, 0.305202, 0.541921, 1.0], "0.8409090909090909"], [[0.243113, 0.292092, 0.538516, 1.0], "0.8409090909090909"], [[0.248629, 0.278775, 0.534556, 1.0], "0.8409090909090909"], [[0.252194, 0.269783, 0.531579, 1.0], "0.13636363636363635"], [[0.257322, 0.25613, 0.526563, 1.0], "0.13636363636363635"], [[0.260571, 0.246922, 0.522828, 1.0], "0.11363636363636363"], [[0.265145, 0.232956, 0.516599, 1.0], "0.11363636363636363"], [[0.269308, 0.218818, 0.509577, 1.0], "0.022727272727272728"], [[0.271828, 0.209303, 0.504434, 1.0], "0.022727272727272728"], [[0.275191, 0.194905, 0.496005, 1.0], "0.022727272727272728"], [[0.278012, 0.180367, 0.486697, 1.0], "0.18181818181818182"], [[0.279574, 0.170599, 0.479997, 1.0], "0.18181818181818182"], [[0.281412, 0.155834, 0.469201, 1.0], "0.6136363636363636"], [[0.28229, 0.145912, 0.46151, 1.0], "0.6136363636363636"], [[0.283072, 0.130895, 0.449241, 1.0], "0.38636363636363635"], [[0.283197, 0.11568, 0.436115, 1.0], "0.38636363636363635"], [[0.28291, 0.105393, 0.426902, 1.0], "0.3181818181818182"], [[0.281924, 0.089666, 0.412415, 1.0], "0.3181818181818182"], [[0.280894, 0.078907, 0.402329, 1.0], "0.3181818181818182"], [[0.278791, 0.062145, 0.386592, 1.0], "0.5"], [[0.276022, 0.044167, 0.370164, 1.0], "0.5"], [[0.273809, 0.031497, 0.358853, 1.0], "0.26136363636363635"], [[0.269944, 0.014625, 0.341379, 1.0], "0.26136363636363635"], [[0.267004, 0.004874, 0.329415, 1.0], "0.36363636363636365"]], [[[0.993248, 0.906157, 0.143936, 1.0], "0.8409090909090909"], [[0.974417, 0.90359, 0.130215, 1.0], "0.8409090909090909"], [[0.945636, 0.899815, 0.112838, 1.0], "0.8409090909090909"], [[0.926106, 0.89733, 0.104071, 1.0], "0.7272727272727273"], [[0.89632, 0.893616, 0.096335, 1.0], "0.7272727272727273"], [[0.866013, 0.889868, 0.095953, 1.0], "0.2727272727272727"], [[0.845561, 0.887322, 0.099702, 1.0], "0.2727272727272727"], [[0.814576, 0.883393, 0.110347, 1.0], "0.125"], [[0.79376, 0.880678, 0.120005, 1.0], "0.125"], [[0.762373, 0.876424, 0.137064, 1.0], "0.125"], [[0.730889, 0.871916, 0.156029, 1.0], "0.125"], [[0.709898, 0.868751, 0.169257, 1.0], "0.125"], [[0.678489, 0.863742, 0.189503, 1.0], "0.5340909090909091"], [[0.657642, 0.860219, 0.203082, 1.0], "0.5340909090909091"], [[0.626579, 0.854645, 0.223353, 1.0], "0.5340909090909091"], [[0.595839, 0.848717, 0.243329, 1.0], "0.5340909090909091"], [[0.575563, 0.844566, 0.256415, 1.0], "0.17045454545454544"], [[0.545524, 0.838039, 0.275626, 1.0], "0.17045454545454544"], [[0.515992, 0.831158, 0.294279, 1.0], "0.17045454545454544"], [[0.496615, 0.826376, 0.306377, 1.0], "0.17045454545454544"], [[0.468053, 0.818921, 0.323998, 1.0], "0.17045454545454544"], [[0.449368, 0.813768, 0.335384, 1.0], "0.4318181818181818"], [[0.421908, 0.805774, 0.35191, 1.0], "0.4318181818181818"], [[0.395174, 0.797475, 0.367757, 1.0], "0.6363636363636364"], [[0.377779, 0.791781, 0.377939, 1.0], "0.6363636363636364"], [[0.35236, 0.783011, 0.392636, 1.0], "0.9545454545454546"], [[0.335885, 0.777018, 0.402049, 1.0], "0.9545454545454546"], [[0.311925, 0.767822, 0.415586, 1.0], "0.9545454545454546"], [[0.288921, 0.758394, 0.428426, 1.0], "0.22727272727272727"], [[0.274149, 0.751988, 0.436601, 1.0], "0.22727272727272727"], [[0.252899, 0.742211, 0.448284, 1.0], "0.6136363636363636"], [[0.239374, 0.735588, 0.455688, 1.0], "0.6136363636363636"], [[0.220124, 0.725509, 0.466226, 1.0], "0.5"], [[0.202219, 0.715272, 0.476084, 1.0], "0.5"], [[0.19109, 0.708366, 0.482284, 1.0], "0.5"], [[0.175707, 0.6979, 0.491033, 1.0], "0.8181818181818182"], [[0.162016, 0.687316, 0.499129, 1.0], "0.8181818181818182"], [[0.153894, 0.680203, 0.504172, 1.0], "0.9090909090909091"], [[0.143303, 0.669459, 0.511215, 1.0], "0.9090909090909091"], [[0.137339, 0.662252, 0.515571, 1.0], "0.022727272727272728"], [[0.130067, 0.651384, 0.521608, 1.0], "0.022727272727272728"], [[0.12478, 0.640461, 0.527068, 1.0], "0.09090909090909091"], [[0.122312, 0.633153, 0.530398, 1.0], "0.09090909090909091"], [[0.120081, 0.622161, 0.534946, 1.0], "0.09090909090909091"], [[0.119483, 0.614817, 0.537692, 1.0], "0.3181818181818182"], [[0.119738, 0.603785, 0.5414, 1.0], "0.3181818181818182"], [[0.121148, 0.592739, 0.544641, 1.0], "0.045454545454545456"], [[0.122606, 0.585371, 0.546557, 1.0], "0.045454545454545456"], [[0.125394, 0.574318, 0.549086, 1.0], "0.7954545454545454"], [[0.127568, 0.566949, 0.550556, 1.0], "0.7954545454545454"], [[0.131172, 0.555899, 0.552459, 1.0], "0.25"], [[0.135066, 0.544853, 0.554029, 1.0], "0.25"], [[0.13777, 0.537492, 0.554906, 1.0], "0.25"], [[0.141935, 0.526453, 0.555991, 1.0], "0.7727272727272727"], [[0.14618, 0.515413, 0.556823, 1.0], "0.7727272727272727"], [[0.149039, 0.508051, 0.55725, 1.0], "0.75"], [[0.153364, 0.497, 0.557724, 1.0], "0.75"], [[0.15627, 0.489624, 0.557936, 1.0], "0.4772727272727273"], [[0.160665, 0.47854, 0.558115, 1.0], "0.4772727272727273"], [[0.165117, 0.467423, 0.558141, 1.0], "0.4772727272727273"], [[0.168126, 0.459988, 0.558082, 1.0], "0.45454545454545453"], [[0.172719, 0.448791, 0.557885, 1.0], "0.45454545454545453"], [[0.175841, 0.44129, 0.557685, 1.0], "0.20454545454545456"], [[0.180629, 0.429975, 0.557282, 1.0], "0.20454545454545456"], [[0.185556, 0.41857, 0.556753, 1.0], "0.29545454545454547"], [[0.188923, 0.41091, 0.556326, 1.0], "0.29545454545454547"], [[0.1941, 0.399323, 0.555565, 1.0], "0.06818181818181818"], [[0.19943, 0.387607, 0.554642, 1.0], "0.06818181818181818"], [[0.203063, 0.379716, 0.553925, 1.0], "0.06818181818181818"], [[0.208623, 0.367752, 0.552675, 1.0], "0.9318181818181818"], [[0.212395, 0.359683, 0.55171, 1.0], "0.9318181818181818"], [[0.21813, 0.347432, 0.550038, 1.0], "0.6818181818181818"], [[0.223925, 0.334994, 0.548053, 1.0], "0.6818181818181818"], [[0.227802, 0.326594, 0.546532, 1.0], "0.375"], [[0.233603, 0.313828, 0.543914, 1.0], "0.375"], [[0.237441, 0.305202, 0.541921, 1.0], "0.4090909090909091"], [[0.243113, 0.292092, 0.538516, 1.0], "0.4090909090909091"], [[0.248629, 0.278775, 0.534556, 1.0], "0.4090909090909091"], [[0.252194, 0.269783, 0.531579, 1.0], "0.8863636363636364"], [[0.257322, 0.25613, 0.526563, 1.0], "0.8863636363636364"], [[0.260571, 0.246922, 0.522828, 1.0], "0.9772727272727273"], [[0.265145, 0.232956, 0.516599, 1.0], "0.9772727272727273"], [[0.269308, 0.218818, 0.509577, 1.0], "1.0"], [[0.271828, 0.209303, 0.504434, 1.0], "1.0"], [[0.275191, 0.194905, 0.496005, 1.0], "1.0"], [[0.278012, 0.180367, 0.486697, 1.0], "0.8636363636363636"], [[0.279574, 0.170599, 0.479997, 1.0], "0.8636363636363636"], [[0.281412, 0.155834, 0.469201, 1.0], "0.5909090909090909"], [[0.28229, 0.145912, 0.46151, 1.0], "0.5909090909090909"], [[0.283072, 0.130895, 0.449241, 1.0], "0.6590909090909091"], [[0.283197, 0.11568, 0.436115, 1.0], "0.6590909090909091"], [[0.28291, 0.105393, 0.426902, 1.0], "0.7045454545454546"], [[0.281924, 0.089666, 0.412415, 1.0], "0.7045454545454546"], [[0.280894, 0.078907, 0.402329, 1.0], "0.7045454545454546"], [[0.278791, 0.062145, 0.386592, 1.0], "0.5681818181818182"], [[0.276022, 0.044167, 0.370164, 1.0], "0.5681818181818182"], [[0.273809, 0.031497, 0.358853, 1.0], "0.3409090909090909"], [[0.269944, 0.014625, 0.341379, 1.0], "0.3409090909090909"], [[0.267004, 0.004874, 0.329415, 1.0], "0.375"]], [[[0.993248, 0.906157, 0.143936, 1.0], "0.7727272727272727"], [[0.974417, 0.90359, 0.130215, 1.0], "0.7727272727272727"], [[0.945636, 0.899815, 0.112838, 1.0], "0.7727272727272727"], [[0.926106, 0.89733, 0.104071, 1.0], "0.6818181818181818"], [[0.89632, 0.893616, 0.096335, 1.0], "0.6818181818181818"], [[0.866013, 0.889868, 0.095953, 1.0], "0.8636363636363636"], [[0.845561, 0.887322, 0.099702, 1.0], "0.8636363636363636"], [[0.814576, 0.883393, 0.110347, 1.0], "0.48863636363636365"], [[0.79376, 0.880678, 0.120005, 1.0], "0.48863636363636365"], [[0.762373, 0.876424, 0.137064, 1.0], "0.48863636363636365"], [[0.730889, 0.871916, 0.156029, 1.0], "0.48863636363636365"], [[0.709898, 0.868751, 0.169257, 1.0], "0.48863636363636365"], [[0.678489, 0.863742, 0.189503, 1.0], "0.5568181818181818"], [[0.657642, 0.860219, 0.203082, 1.0], "0.5568181818181818"], [[0.626579, 0.854645, 0.223353, 1.0], "0.5568181818181818"], [[0.595839, 0.848717, 0.243329, 1.0], "0.5568181818181818"], [[0.575563, 0.844566, 0.256415, 1.0], "0.2840909090909091"], [[0.545524, 0.838039, 0.275626, 1.0], "0.2840909090909091"], [[0.515992, 0.831158, 0.294279, 1.0], "0.2840909090909091"], [[0.496615, 0.826376, 0.306377, 1.0], "0.2840909090909091"], [[0.468053, 0.818921, 0.323998, 1.0], "0.2840909090909091"], [[0.449368, 0.813768, 0.335384, 1.0], "0.36363636363636365"], [[0.421908, 0.805774, 0.35191, 1.0], "0.36363636363636365"], [[0.395174, 0.797475, 0.367757, 1.0], "0.38636363636363635"], [[0.377779, 0.791781, 0.377939, 1.0], "0.38636363636363635"], [[0.35236, 0.783011, 0.392636, 1.0], "0.9545454545454546"], [[0.335885, 0.777018, 0.402049, 1.0], "0.9545454545454546"], [[0.311925, 0.767822, 0.415586, 1.0], "0.9545454545454546"], [[0.288921, 0.758394, 0.428426, 1.0], "0.25"], [[0.274149, 0.751988, 0.436601, 1.0], "0.25"], [[0.252899, 0.742211, 0.448284, 1.0], "0.8181818181818182"], [[0.239374, 0.735588, 0.455688, 1.0], "0.8181818181818182"], [[0.220124, 0.725509, 0.466226, 1.0], "0.3181818181818182"], [[0.202219, 0.715272, 0.476084, 1.0], "0.3181818181818182"], [[0.19109, 0.708366, 0.482284, 1.0], "0.3181818181818182"], [[0.175707, 0.6979, 0.491033, 1.0], "0.9318181818181818"], [[0.162016, 0.687316, 0.499129, 1.0], "0.9318181818181818"], [[0.153894, 0.680203, 0.504172, 1.0], "0.8863636363636364"], [[0.143303, 0.669459, 0.511215, 1.0], "0.8863636363636364"], [[0.137339, 0.662252, 0.515571, 1.0], "0.045454545454545456"], [[0.130067, 0.651384, 0.521608, 1.0], "0.045454545454545456"], [[0.12478, 0.640461, 0.527068, 1.0], "0.22727272727272727"], [[0.122312, 0.633153, 0.530398, 1.0], "0.22727272727272727"], [[0.120081, 0.622161, 0.534946, 1.0], "0.22727272727272727"], [[0.119483, 0.614817, 0.537692, 1.0], "0.18181818181818182"], [[0.119738, 0.603785, 0.5414, 1.0], "0.18181818181818182"], [[0.121148, 0.592739, 0.544641, 1.0], "0.06818181818181818"], [[0.122606, 0.585371, 0.546557, 1.0], "0.06818181818181818"], [[0.125394, 0.574318, 0.549086, 1.0], "0.6590909090909091"], [[0.127568, 0.566949, 0.550556, 1.0], "0.6590909090909091"], [[0.131172, 0.555899, 0.552459, 1.0], "0.3409090909090909"], [[0.135066, 0.544853, 0.554029, 1.0], "0.3409090909090909"], [[0.13777, 0.537492, 0.554906, 1.0], "0.3409090909090909"], [[0.141935, 0.526453, 0.555991, 1.0], "0.7954545454545454"], [[0.14618, 0.515413, 0.556823, 1.0], "0.7954545454545454"], [[0.149039, 0.508051, 0.55725, 1.0], "0.5909090909090909"], [[0.153364, 0.497, 0.557724, 1.0], "0.5909090909090909"], [[0.15627, 0.489624, 0.557936, 1.0], "0.7272727272727273"], [[0.160665, 0.47854, 0.558115, 1.0], "0.7272727272727273"], [[0.165117, 0.467423, 0.558141, 1.0], "0.7272727272727273"], [[0.168126, 0.459988, 0.558082, 1.0], "0.13636363636363635"], [[0.172719, 0.448791, 0.557885, 1.0], "0.13636363636363635"], [[0.175841, 0.44129, 0.557685, 1.0], "0.6363636363636364"], [[0.180629, 0.429975, 0.557282, 1.0], "0.6363636363636364"], [[0.185556, 0.41857, 0.556753, 1.0], "0.09090909090909091"], [[0.188923, 0.41091, 0.556326, 1.0], "0.09090909090909091"], [[0.1941, 0.399323, 0.555565, 1.0], "0.022727272727272728"], [[0.19943, 0.387607, 0.554642, 1.0], "0.022727272727272728"], [[0.203063, 0.379716, 0.553925, 1.0], "0.022727272727272728"], [[0.208623, 0.367752, 0.552675, 1.0], "0.8409090909090909"], [[0.212395, 0.359683, 0.55171, 1.0], "0.8409090909090909"], [[0.21813, 0.347432, 0.550038, 1.0], "0.6136363636363636"], [[0.223925, 0.334994, 0.548053, 1.0], "0.6136363636363636"], [[0.227802, 0.326594, 0.546532, 1.0], "0.4090909090909091"], [[0.233603, 0.313828, 0.543914, 1.0], "0.4090909090909091"], [[0.237441, 0.305202, 0.541921, 1.0], "0.11363636363636363"], [[0.243113, 0.292092, 0.538516, 1.0], "0.11363636363636363"], [[0.248629, 0.278775, 0.534556, 1.0], "0.11363636363636363"], [[0.252194, 0.269783, 0.531579, 1.0], "0.9090909090909091"], [[0.257322, 0.25613, 0.526563, 1.0], "0.9090909090909091"], [[0.260571, 0.246922, 0.522828, 1.0], "0.9772727272727273"], [[0.265145, 0.232956, 0.516599, 1.0], "0.9772727272727273"], [[0.269308, 0.218818, 0.509577, 1.0], "1.0"], [[0.271828, 0.209303, 0.504434, 1.0], "1.0"], [[0.275191, 0.194905, 0.496005, 1.0], "1.0"], [[0.278012, 0.180367, 0.486697, 1.0], "0.75"], [[0.279574, 0.170599, 0.479997, 1.0], "0.75"], [[0.281412, 0.155834, 0.469201, 1.0], "0.1590909090909091"], [[0.28229, 0.145912, 0.46151, 1.0], "0.1590909090909091"], [[0.283072, 0.130895, 0.449241, 1.0], "0.5227272727272727"], [[0.283197, 0.11568, 0.436115, 1.0], "0.5227272727272727"], [[0.28291, 0.105393, 0.426902, 1.0], "0.7045454545454546"], [[0.281924, 0.089666, 0.412415, 1.0], "0.7045454545454546"], [[0.280894, 0.078907, 0.402329, 1.0], "0.7045454545454546"], [[0.278791, 0.062145, 0.386592, 1.0], "0.45454545454545453"], [[0.276022, 0.044167, 0.370164, 1.0], "0.45454545454545453"], [[0.273809, 0.031497, 0.358853, 1.0], "0.20454545454545456"], [[0.269944, 0.014625, 0.341379, 1.0], "0.20454545454545456"], [[0.267004, 0.004874, 0.329415, 1.0], "0.4318181818181818"]]], "legend_title": ["", "molecules", "molecules", "molecules", "molecules"], "mapping": {"c": "c", "cs": "cs", "labels": "labels", "s": "s", "x": "x", "y": "y", "z": "z"}, "max_c": [1.0, 1.0, 1.0, 1.0, 1.0], "max_legend_label": ["1.00", "1", "3", "-3", "1514"], "max_point_size": 100, "min_c": [0.0, 0.022727272727272728, 0.022727272727272728, 0.022727272727272728, 0.022727272727272728], "min_legend_label": ["0.00", "0", "1", "-18", "188"], "name": "molecules", "ondblclick": [null, null, null, null, null], "point_scale": 20, "selected_labels": [["SMILES", "Dashboard", "Name"], ["SMILES", "Dashboard", "Name"], ["SMILES", "Dashboard", "Name"], ["SMILES", "Dashboard", "Name"], ["SMILES", "Dashboard", "Name"]], "series_title": ["Group", "QED", "SCScore", "ESOL", "MolWt"], "shader": "smoothCircle", "title_index": [2, 2, 2, 2, 2]}];
+          this.treeMeta = [{"color": "#666666", "fog_intensity": 0.0, "mapping": {"c": "c", "from": "from", "to": "to", "x": "x", "y": "y", "z": "z"}, "name": "prostate", "point_helper": "molecules"}];
+          this.seriesState = {};
+          this.el = {};
+
+          this.currentPoint = null;
+
+          this.lore = null;
+          this.clearColorHex = '#222222';
+          this.clearColor = null;
+          this.view = 'front';
+          this.antiAliasing = true;
+          this.alphaBlending = false;
+
+          this.treeHelpers = [];
+          this.pointHelpers = [];
+          this.octreeHelpers = [];
+          this.coordinatesHelper = null;
+
+          this.ohIndexToPhName = [];
+          this.ohIndexToPhIndex = [];
+          this.phIndexMap = {};
+          this.ohIndexMap = {};
+
+          this.min = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
+          this.max = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
+          this.maxRadius = -Number.MAX_VALUE;
+
+          this.coords = {
+            show: false,
+            grid: false,
+            ticks: true,
+            tickCount: 10,
+            tickLength: 2.0,
+            color: '#888888',
+            box: false,
+            offset: 5.0
+          };
+
+          this.legend = {
+            show: true,
+            title: 'Legend'
+          };
+
+          this.el = Faerun.bindElements();
+
+          this.scatterMeta.forEach(s => {
+            this.seriesState[s.name] = 0;
+          });
+
+          this.clearColor = Lore.Core.Color.fromHex(this.clearColorHex);
+          this.alphaBlending = (this.view === 'free' ? false : true) || this.alphaBlending;
+
+          this.initLore();
+          this.initTreeHelpers();
+          this.initPointHelpers();
+          this.initCoords();
+          this.initAxes();
+          this.initView();
+          this.initEvents();
+          this.renderLegend();
+        }
+
+        initLore() {
+          this.lore = Lore.init('lore', {
+            antialiasing: this.antiAliasing,
+            clearColor: this.clearColorHex,
+            alphaBlending: this.alphaBlending,
+            preserveDrawingBuffer: true
+          });
+        }
+
+        initTreeHelpers() {
+          this.treeMeta.forEach(t => {
+            let th = new Lore.Helpers.TreeHelper(this.lore, t.name, 'tree');
+            th.setXYZHexS(data[t.name].x, data[t.name].y, data[t.name].z, t.color);
+            th.setFog([this.clearColor.components[0], this.clearColor.components[1], 
+                       this.clearColor.components[2], this.clearColor.components[3]],
+                      t.fog_intensity);
+            this.treeHelpers.push(th);
+          });
+        }
+
+        initPointHelpers() {
+          this.scatterMeta.forEach(s => {           
+            let ph = new Lore.Helpers.PointHelper(
+              this.lore, s.name, s.shader, { maxPointSize: s.max_point_size }
+            );
+
+            ph.setXYZRGBS(data[s.name].x, data[s.name].y, data[s.name].z, 
+                          data[s.name]['colors'][0].r, data[s.name]['colors'][0].g, 
+                          data[s.name]['colors'][0].b, data[s.name].s);
+
+            ph.setPointScale(s.point_scale);
+            ph.setFog([this.clearColor.components[0], this.clearColor.components[1],
+                       this.clearColor.components[2], this.clearColor.components[3]],
+                      s.fog_intensity)
+
+            this.phIndexMap[s.name] = this.pointHelpers.length;
+            this.pointHelpers.push(ph);
+
+            this.min[0] = Faerun.getMin(data[s.name].x, this.min[0]);
+            this.min[1] = Faerun.getMin(data[s.name].y, this.min[1]);
+            this.min[2] = Faerun.getMin(data[s.name].z, this.min[2]);
+            this.max[0] = Faerun.getMax(data[s.name].x, this.max[0]);
+            this.max[1] = Faerun.getMax(data[s.name].y, this.max[1]);
+            this.max[2] = Faerun.getMax(data[s.name].z, this.max[2]);
+            this.maxRadius = ph.getMaxRadius();
+    
+            if (s.interactive && data[s.name].labels) {
+              this.octreeHelpers.push(
+                new Lore.Helpers.OctreeHelper(this.lore, 'Octree_' + s.name, 'tree', ph)
+              );
+
+              this.ohIndexMap[s.name] = this.octreeHelpers.length - 1;
+              this.ohIndexToPhName.push(s.name);
+              this.ohIndexToPhIndex.push(this.phIndexMap[s.name]);
+            }
+          });
+        }
+
+        initCoords() {
+          if (!this.coords.show) return;
+
+          let min = [0, 0, 0];
+          let max = [0, 0, 0];
+
+          for (var i = 0; i < 3; i++) {
+            min[i] = this.min[i] - this.coords.offset;
+            max[i] = this.max[i] + this.coords.offset;
+          }
+
+          this.coordinatesHelper = new Lore.Helpers.CoordinatesHelper(this.lore, 'Coordinates', 'coordinates', {
+            position: new Lore.Math.Vector3f(min[0], min[1], min[2]),
+            axis: {
+              x: {
+                length: max[0] - min[0],
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              },
+              y: {
+                length: max[1] - min[1],
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              },
+              z: {
+                length: max[2] - min[2],
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              }
+            },
+            ticks: {
+              enabled: this.coords.ticks,
+              x: {
+                length: this.coords.tickLength,
+                color: Lore.Core.Color.fromHex(this.coords.color),
+                count: this.coords.tickCount
+              },
+              y: {
+                length: this.coords.tickLength,
+                color: Lore.Core.Color.fromHex(this.coords.color),
+                count: this.coords.tickCount
+              },
+              z: {
+                length: this.coords.tickLength,
+                color: Lore.Core.Color.fromHex(this.coords.color),
+                count: this.coords.tickCount
+              }
+            },
+            box: {
+              enabled: this.coords.box,
+              x: {
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              },
+              y: {
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              },
+              z: {
+                color: Lore.Core.Color.fromHex(this.coords.color)
+              }
+            }
+          });
+        }
+
+        initAxes() {
+          // Wait for DOM to get ready
+          setTimeout(() => {
+            this.updateTitle(true);
+            this.updateXAxis(true);
+            this.updateYAxis(true);
+          }, 500);
+        }
+
+        initView() {
+          let center = new Lore.Math.Vector3f(
+              (this.max[0] + this.min[0]) / 2.0, 
+              (this.max[1] + this.min[1]) / 2.0, 
+              (this.max[2] + this.min[2]) / 2.0
+            );
+          this.lore.controls.setLookAt(center);
+          this.lore.controls.setRadius(this.maxRadius + 100);
+          this.lore.controls.setView(0.9, -0.5)
+          this.lore.controls.setViewByName(this.view);
+        }
+
+        initEvents() {
+          this.lore.controls.addEventListener('updated', () => {
+            // Update the position / content of the annotations every time
+            // the view changes
+            this.updateTitle();
+            this.updateYAxis();
+            this.updateXAxis();
+            this.updateSelectedIndicators();
+          });
+
+          Lore.Helpers.OctreeHelper.joinHoveredChanged(this.octreeHelpers, e => {
+            let phName = this.ohIndexToPhName[e.source];
+            if (e.e && data[phName].labels) {
+              let fullLabel = data[phName].labels[e.e.index];
+              let labelIndex = this.scatterMeta[this.ohIndexToPhIndex[e.source]]
+                                  .label_index[this.seriesState[phName]];
+              let titleIndex = this.scatterMeta[this.ohIndexToPhIndex[e.source]]
+                                  .title_index[this.seriesState[phName]];
+
+              let rgbColor = this.pointHelpers[e.source].getColor(e.e.index);
+              let hexColor = Lore.Core.Color.rgbToHex(rgbColor[0], rgbColor[1], rgbColor[2]);
+
+              this.currentPoint = {
+                index: e.e.index,
+                fullLabel: fullLabel.split('__'),
+                source: phName,
+                label: fullLabel.split('__')[labelIndex],
+                color: hexColor,
+                labelIndex: labelIndex,
+                titleIndex: titleIndex
+              }
+              
+              this.setTipContent();
+              this.el.tip.classList.add('show');
+
+              let pointSize = this.pointHelpers[e.source].getPointSize() / window.devicePixelRatio;
+              let x = e.e.screenPosition[0];
+              let y = e.e.screenPosition[1];
+
+              this.el.hoverIndicator.style.width = pointSize + 'px';
+              this.el.hoverIndicator.style.height = pointSize + 'px';
+              this.el.hoverIndicator.style.left = (x - pointSize / 2.0 - 1) + 'px';
+              this.el.hoverIndicator.style.top = (y - pointSize / 2.0 - 1) + 'px';
+
+              this.el.hoverIndicator.classList.add('show');
+            } else {
+              this.currentPoint = null;
+              this.el.tip.classList.remove('show');
+              this.el.hoverIndicator.classList.remove('show');
+            }
+          });
+
+          Lore.Helpers.OctreeHelper.joinSelectedChanged(this.octreeHelpers, items => {
+            this.selectedItems = items;
+            this.updateSelected();
+          });
+
+          Lore.Helpers.OctreeHelper.joinReselected(this.octreeHelpers, item => {
+            this.updateSelected(
+              this.getSelectedIndex(item[0].source, item[0].item.e.index)
+            );
+          });
+
+          // Event listeners
+          this.el.selectedPrev.addEventListener('click', e => {
+            e.preventDefault();
+            this.updateSelected(this.selectedCurrent - 1);
+            return false;
+          });
+
+          this.el.selectedNext.addEventListener('click', e => {
+            e.preventDefault();
+            this.updateSelected(this.selectedCurrent + 1);
+            return false;
+          });
+
+          document.addEventListener('dblclick', e => {
+            if (this.currentPoint) {
+              var index = this.currentPoint.index;
+              var labels = this.currentPoint.label.split('__');
+              var source = this.currentPoint.source;
+              eval(this.scatterMeta[this.phIndexMap[source]].ondblclick[this.seriesState[source]]);
+            }
+          });
+
+          document.addEventListener('mousemove', e => {
+            let x = e.clientX;
+            let y = e.clientY;
+
+            if (x > window.innerWidth - this.el.tip.offsetWidth - 20) {
+              x -= this.el.tip.offsetWidth;
+            } else {
+              x += 10;
+            }
+
+            if (y > window.innerHeight - this.el.tip.offsetHeight - 20) {
+              y -= this.el.tip.offsetHeight;
+            } else {
+              y += 10;
+            }
+
+            if (this.el.tip) {
+              this.el.tip.style.top = y + 'px';
+              this.el.tip.style.left = x + 'px';
+            }
+          });
+
+          this.el.selectedToggle.addEventListener('click', e => {
+            this.el.selectedContainer.classList.toggle('hide');
+            if (this.el.selectedContainer.classList.contains('hide'))
+              this.el.selectedToggle.innerHTML = '<i class="fas fa-toggle-off"></i>';
+            else
+              this.el.selectedToggle.innerHTML = '<i class="fas fa-toggle-on"></i>';
+            
+            e.preventDefault();
+            return false;
+          });
+
+          this.el.showControls.addEventListener('click', e => {
+            this.el.moreControls.classList.toggle('hide');
+            e.preventDefault();
+            return false;
+          });
+
+          this.el.search.addEventListener('click', e => {
+            let searchTerm = prompt('Please enter a serch term:', '');
+            const results = this.search(searchTerm);
+
+            for (const [name, indices] of Object.entries(results)) {
+              if (!name in this.ohIndexMap) return;
+              indices.forEach(index => {
+                this.octreeHelpers[this.ohIndexMap[name]].addSelected(index);
+              });
+            }
+            
+            e.preventDefault();
+            return false;
+          });
+
+          window.addEventListener('keydown', e => {
+            if ((e.keyCode == 114) || (e.ctrlKey && e.keyCode == 70)) {
+              this.search();
+              e.preventDefault();
+              return false;
+            }
+          });
+
+          this.el.export.addEventListener('click', e => {
+            e.preventDefault();
+
+            let canvas = document.getElementById('lore');
+            let zoom = this.lore.controls.getZoom();
+
+            canvas.style.width = (canvas.width * 2) + 'px';
+            canvas.style.height = (canvas.height * 2) + 'px';
+            this.lore.controls.setZoom(zoom * 2);
+
+            setTimeout(() => {
+              let blob = this.lore.canvas.toBlob(blob => {
+                let a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.setAttribute('download', 'export.png');
+                a.click();
+                
+                setTimeout(() => {
+                  canvas.style.width = '100%';
+                  canvas.style.height = '100%';
+                  lore.controls.setZoom(zoom);
+                }, 2000);
+              });
+            }, 2000);
+          });
+        }
+
+        setTipContent() {
+          SmilesDrawer.parse(this.currentPoint.label, tree => {
+            smilesDrawer.draw(tree, 'smiles-canvas', 'light', false);
+            let tipImage = Faerun.createElement('img');
+            tipImage.src = this.el.smilesCanvas.toDataURL();
+            this.el.tipText.innerHTML = '';
+            if (this.currentPoint.titleIndex !== this.currentPoint.labelIndex)
+              this.el.tipText.innerHTML = `${this.currentPoint.fullLabel[this.currentPoint.titleIndex]}<br />`;
+            this.el.tipText.appendChild(tipImage);
+            this.el.tip.style.borderColor = this.currentPoint.color;
+          }, err => { console.log(err); });
+        }
+
+        setSelectedContent(fullLabel, labelIndex, selectedLabels, img) {
+          this.el.selectedContainer.innerHTML = '';
+          if (img)
+            this.el.selectedContainer.appendChild(img);
+
+          fullLabel.forEach((l, i) => {
+            if (i === labelIndex) return;
+            if (selectedLabels && selectedLabels[i]) {
+              this.el.selectedContainer.appendChild(
+                Faerun.createElement('div', { classes: 'label', content: selectedLabels[i] })
+              );
+            }
+            this.el.selectedContainer.appendChild(
+              Faerun.createElement('div', { classes: 'content', content: l })
+            );
+          });
+
+          // Update the indicator
+          this.updateSelectedIndicators();
+        }
+
+        renderLegend() {
+          if (!this.legend.show) return;
+
+          
+          let legend = document.getElementById('legend');
+          
+          if (legend) this.body.removeChild(legend);
+
+          legend = Faerun.createElement('div', { id: 'legend' });
+          this.body.appendChild(legend)
+          
+          if (this.legend.title && this.legend.title !== '')
+            legend.appendChild(Faerun.createElement('h2', { content: 'Legend' }));
+          
+          let container = Faerun.createElement('div', { classes: 'container' });
+          legend.appendChild(container);
+
+          this.scatterMeta.forEach(s => {
+            let index = this.seriesState[s.name];
+            if (s.has_legend) {
+              let legendSection = []
+              if (!s.is_range[index]) {
+                s.legend[index].forEach(v => {
+                  legendSection.push(Faerun.createElement('div', { classes: 'legend-element' }, [
+                    Faerun.createColorBox(v[0]),
+                    Faerun.createElement('div', { classes: 'legend-label', content: v[1] }),
+                  ]))
+                })
+              } else {
+                legendSection.push(Faerun.createElement('div', { classes: 'legend-element-range' }, [
+                  ...Faerun.createColorScale(s.legend[index]),
+                  Faerun.createElement('div', { 
+                    classes: 'legend-label max', 
+                    content: s.max_legend_label[index] 
+                  }),
+                  Faerun.createElement('div', {
+                    classes: 'legend-label min',
+                    content: s.min_legend_label[index] 
+                  })
+                ]))
+              }
+
+              let series = [];
+              for (var i = 0; i < s.series_title.length; i++) {
+                series.push(
+                  Faerun.createElement('option', { 
+                    value: i, 
+                    content: s.series_title[i], 
+                    selected: i === index
+                  })
+                );
+              }
+
+
+              let sectionHeader = Faerun.createElement(
+                'h3', { content: s.legend_title[index] }
+              );
+              sectionHeader.addEventListener('click', e => {
+                this.toggleLegendSection(s.name);
+              });
+
+              let seriesSelector = Faerun.createElement(
+                'select', 
+                { 
+                  id: `select-${s.name}`, 
+                  classes: 'series-selector',
+                  'data-name': s.name,
+                  hidden: s.series_title.length < 2,
+                }, 
+                [ ...series ]
+              );
+              seriesSelector.addEventListener('change', e => {
+                let value = document.getElementById(`select-${s.name}`).value;
+                this.changeSeries(value, s.name);
+              });
+
+
+              container.appendChild(
+                Faerun.createElement(
+                  'div', { id: `legend-${s.name}`, 
+                  classes: 'legend-section', 
+                  'data-name': `${s.name}` },
+                  [ sectionHeader, seriesSelector, ...legendSection ]
+                )
+              );
+            }
+          });
+        }
+
+        toggleLegendSection(name) {
+          let section = document.getElementById('legend-' + name);
+          let geometry = this.pointHelpers[this.phIndexMap[name]].geometry;
+          let isVisible = geometry.isVisible;
+
+          if (isVisible) {
+            geometry.hide();
+            section.style.opacity = 0.5;
+          } else {
+            geometry.show();
+            section.style.opacity = 1.0;
+          }
+        }
+
+        getSelectedIndex(source, index) {
+          let selectedIndex = null;
+          this.selectedItems.forEach((item, i) => {
+            if (item.source == source && item.item.index == index) {
+              selectedIndex = i;
+              return;
+            }
+          });
+          return selectedIndex;
+        }
+
+        updateSelected(current = -1) {
+          let n = this.selectedItems.length
+          // Hide the container if no items are selected
+          if (n === 0) {
+            this.el.selected.style.display = 'none';
+            return;
+          } else {
+            this.el.selected.style.display = 'block';
+          }
+
+          if (current < 0) current = n - 1;
+          if (current >= n) current = 0;
+          this.selectedCurrent = current;
+
+          let item = this.selectedItems[current];
+
+          let phIndex = this.ohIndexToPhIndex[item.source];
+          let meta = this.scatterMeta[phIndex];
+          let phName = this.ohIndexToPhName[item.source];
+          let seriesState = this.seriesState[phName];
+
+          let fullLabel = data[phName].labels[item.item.index].split('__');
+
+          let labelIndex = meta.label_index[seriesState];
+          let titleIndex = meta.title_index[seriesState];
+          let selectedLabels = meta.selected_labels[seriesState];
+
+          SmilesDrawer.parse(fullLabel[labelIndex], tree => {
+            smilesDrawer.draw(tree, 'smiles-canvas', 'dark', false);
+            let img = Faerun.createElement('img');
+            img.src = this.el.smilesCanvas.toDataURL();
+            
+            this.el.selectedCurrent.innerHTML = current + 1;
+            this.el.selectedTotal.innerHTML = n;
+            this.el.selectedTitle.innerHTML = fullLabel[titleIndex];
+
+            this.setSelectedContent(fullLabel, labelIndex, selectedLabels, img);
+          }, err => { console.log(err); });
+
+          // Remove all indicators
+          this.selectedIndicators.forEach(indicator => {
+            indicator.element.parentElement.removeChild(indicator.element);
+          });
+          this.selectedIndicators.length = 0;
+
+          // Add the indicator for this object
+          let indicatorElement = Faerun.createElement(
+            'div', 
+            { classes: 'selected-indicator' },
+            [
+              Faerun.createElement('div', { classes: 'crosshair-x' }),
+              Faerun.createElement('div', { classes: 'crosshair-y' })
+            ]
+          );
+
+          this.body.appendChild(indicatorElement);
+          this.selectedIndicators.push({
+            element: indicatorElement,
+            index: item.item.index,
+            ohIndex: item.source,
+            phIndex: phIndex
+          });
+          this.updateSelectedIndicators();
+        }
+
+        updateSelectedIndicators() {
+          this.selectedIndicators.forEach(indicator => {
+            let pointSize = this.pointHelpers[indicator.phIndex].getPointSize();
+            let screenPosition = this.octreeHelpers[indicator.ohIndex]
+                                     .getScreenPosition(indicator.index);
+            
+            // Make the crosshairs larger than the point
+            pointSize = Faerun.getMax([pointSize / window.devicePixelRatio, 10 / window.devicePixelRatio]);
+            pointSize *= 1.25;
+            let halfPointSize = pointSize / 2.0;
+            indicator.element.style.left = (screenPosition[0] - halfPointSize) + 'px';
+            indicator.element.style.top = (screenPosition[1] - halfPointSize) + 'px';
+            indicator.element.style.width = pointSize + 'px';
+            indicator.element.style.height = pointSize + 'px';
+          });
+        }
+
+        updateTitle(first = false) {
+          if (this.el.title === undefined) return;
+
+          let bb = this.el.title.getBoundingClientRect();
+          let scenePosition = new Lore.Math.Vector3f(
+            (this.min[0] + this.min[0]) / 2.0, this.min[1], 
+            (this.min[2] + this.min[2]) / 2.0
+          );
+
+          let screenPosition = this.lore.controls.camera.sceneToScreen(scenePosition, this.lore);
+          
+          this.el.title.style.left = (screenPosition[0] - (bb.width / 2.0)) + 'px';
+          this.el.title.style.top = (screenPosition[1] - bb.height) + 'px';
+
+          if (first) this.el.title.classList.add('show');
+        }
+
+        updateXAxis(first = false) {
+          if (this.el.xAxis === undefined) return;
+          
+          let bb = this.el.xAxis.getBoundingClientRect();
+          let scenePosition = new Lore.Math.Vector3f(
+            (this.min[0] + this.min[0]) / 2.0, this.min[1], 
+            (this.min[2] + this.min[2]) / 2.0
+          );
+
+          let screenPosition = this.lore.controls.camera.sceneToScreen(scenePosition, this.lore);
+          
+          this.el.xAxis.style.left = (screenPosition[0] - (bb.width / 2.0)) + 'px';
+          this.el.xAxis.style.top = (screenPosition[1]) + 'px';
+
+          if (first) this.el.xAxis.classList.add('show');
+        }
+
+        updateYAxis(first = false) {
+          if (this.el.yAxis === undefined) return;
+            
+          let bb = this.el.yAxis.getBoundingClientRect();
+          let scenePosition = new Lore.Math.Vector3f(
+            this.min[0], (this.min[1] + this.min[1]) / 2.0, 
+            (this.min[2] + this.min[2]) / 2.0
+          );
+          
+          let screenPosition = this.lore.controls.camera.sceneToScreen(scenePosition, this.lore);
+          
+          this.el.yAxis.style.left = (screenPosition[0] - bb.height) + 'px';
+          this.el.yAxis.style.top = (screenPosition[1] - bb.width / 2.0) + 'px';
+
+          if (first) this.el.yAxis.classList.add('show');
+        }
+
+        changeSeries(value, name) {
+          value = parseInt(value);
+          this.seriesState[name] = value;
+          this.renderLegend();
+
+          this.pointHelpers[this.phIndexMap[name]].setRGBFromArrays(
+            data[name]['colors'][value].r, 
+            data[name]['colors'][value].g, 
+            data[name]['colors'][value].b
+          );
+        }
+
+        search(term) {
+          let results = {}
+          let re = new RegExp(term, 'i');
+
+          Object.keys(data).forEach(name => {
+            if (!('labels' in data[name])) return;
+            results[name] = []
+            data[name]['labels'].forEach((label, i) => {
+              if (re.test(label))
+                results[name].push(i)
+            });
+          });
+
+          return results;
+        }
+
+        static createColorBox(value) {
+          return Faerun.createElement(
+            'div', 
+            { 
+              classes: 'color-box', 
+              style: `background-color: rgba(${value[0] * 255}, ${value[1] * 255 }, ${value[2] * 255 }, ${value[3] });
+                      border-color: rgba(${value[0] * 255 }, ${value[1] * 255 }, ${value[2] * 255 }, ${value[3] })`
+            }
+          );
+        }
+
+        static createColorScale(values) {
+          let scale = [];
+
+          values.forEach(value => {
+            scale.push(
+              Faerun.createElement(
+                'div', 
+                { 
+                  classes: 'color-stripe', 
+                  style: `background-color: rgba(${value[0][0] * 255}, ${value[0][1] * 255}, ${value[0][2] * 255}, ${value[0][3]});
+                          border-color: rgba(${value[0][0] * 255}, ${value[0][1] * 255}, ${value[0][2] * 255}, ${value[0][3]})`,
+                  alt: value[1]
+                }
+              ),
+            )
+          });
+
+          return scale;
+        }
+        
+        static createElement(tag, values = {}, children = []) {
+          let element = document.createElement(tag);
+
+          for (const key of Object.keys(values)) {
+            if (key === 'classes')
+              element.classList.add(...values[key].split(' '));
+            else if (key === 'content')
+              element.innerHTML = values[key];
+            else if (key === 'hidden') {
+              if (values[key])
+                element.setAttribute('hidden', true);
+            }
+            else if (key === 'selected') {
+              if (values[key])
+                element.setAttribute('selected', true);
+            }
+            else
+              element.setAttribute(key, values[key]);
+          }
+
+          if (children) {
+            if (Array.isArray(children)) {
+              children.forEach(child => {
+                element.appendChild(child);
+              })
+            } else {
+              element.appendChild(children);
+            }
+          }
+
+          return element;
+        }
+
+        static bindElements() {
+          let result = {};
+          document.querySelectorAll('[data-bind]').forEach(e => {
+            result[e.getAttribute('data-bind')] = e;
+          });
+          return result;
+        }
+
+        static getMin(arr, other = Number.MAX_VALUE) {
+          let m = Number.MAX_VALUE;
+          for (var i = 0; i < arr.length; i++)
+              if (arr[i] < m) m = arr[i];
+          
+          if (m < other) return m;
+          return other;
+        }
+
+        static getMax(arr, other = -Number.MAX_VALUE) {
+          let m = -Number.MAX_VALUE;
+          for (var i = 0; i < arr.length; i++)
+              if (arr[i] > m) m = arr[i];
+          
+          if (m > other) return m;
+          return other;
+        }
+      }
+
+      let f = new Faerun();
+    </script>
+  </body>
+</html>
