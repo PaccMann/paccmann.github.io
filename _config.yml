@@ -14,7 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: PaccMann
-email: tte@zurich.ibm.com
+email: tte@zurich.ibm.com, jab@zurich.ibm.com, dow@zurich.ibm.com
 description: >- # this means to ignore newlines until "baseurl:"
   PaccMann enables the design of small molecules using a multimodal deep
   generative architecture. The system has been computationally validated on

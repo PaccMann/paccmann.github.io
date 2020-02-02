@@ -13,7 +13,7 @@
 <meta property="og:url" content="http://localhost:4000/" />
 <meta property="og:site_name" content="PaccMann" />
 <script type="application/ld+json">
-{"description":"PaccMann enables the design of small molecules using a multimodal deep generative architecture. The system has been computationally validated on designing anticancer compounds from transcriptomic profiles.","headline":"PaccMann","@type":"WebSite","url":"http://localhost:4000/","name":"PaccMann","@context":"https://schema.org"}</script>
+{"description":"PaccMann enables the design of small molecules using a multimodal deep generative architecture. The system has been computationally validated on designing anticancer compounds from transcriptomic profiles.","@type":"WebSite","url":"http://localhost:4000/","name":"PaccMann","headline":"PaccMann","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="PaccMann" /></head>
 <body><header class="site-header" role="banner">
@@ -36,30 +36,50 @@
         <div class="home">
 
 
-  <h1>Welcome to Jekyll!</h1>
-  <p>You’ll find this post in your <code class="language-plaintext highlighter-rouge">_posts</code> directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run <code class="language-plaintext highlighter-rouge">jekyll serve</code>, which launches a web server and auto-regenerates your site when a file is updated.</p>
+  <h1>PaccMann^RL: Designing anticancer drugs from transcriptomic data via reinforcement learning</h1>
+  <p><img src="rl/paccmann_framework.png" alt="PaccMann framework" class="img-responsive" /></p>
 
-<p>To add new posts, simply add a file in the <code class="language-plaintext highlighter-rouge">_posts</code> directory that follows the convention <code class="language-plaintext highlighter-rouge">YYYY-MM-DD-name-of-post.ext</code> and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.</p>
+<p>With the advent of deep generative models in computational chemistry, in silico anticancer drug design has undergone an unprecedented transformation.
+While state-of-the-art deep learning approaches have shown potential in generating compounds with desired chemical properties, they disregard the genetic profile and properties of the target disease.
+Here, we introduce the first generative model capable of tailoring anticancer compounds for a specific biomolecular profile.
+Using a RL framework (see figure above), the transcriptomic profiles of cancer cells are used as a context for the generation of candidate molecules.
+Our molecule generator combines two separately pretrained variational autoencoders (VAEs) - the first VAE encodes transcriptomic profiles into a smooth, latent space which in turn is used to condition a second VAE to generate novel molecular structures on the given transcriptomic profile.
+The generative process is optimized through PaccMann, a previously developed drug sensitivity prediction model to obtain effective anticancer compounds for the given context (i.e., transcriptomic profile).
+We demonstrate how the molecule generation can be biased towards compounds with high predicted inhibitory effect against individual cell lines or specific cancer sites.
+We verify our approach by investigating candidate drugs generated against specific cancer types and find the highest structural similarity to existing compounds with known efficacy against these cancer types.
+We envision our approach to transform in silico anticancer drug design by leveraging the biomolecular characteristics of the disease in order to increase success rates in lead compound discovery.</p>
 
-<p>Jekyll also offers powerful support for code snippets:</p>
+<p>For more details, please see the <a href="https://arxiv.org/abs/1909.05114">full paper</a>.</p>
 
-<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">print_hi</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">"Hi, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-<span class="n">print_hi</span><span class="p">(</span><span class="s1">'Tom'</span><span class="p">)</span>
-<span class="c1">#=&gt; prints 'Hi, Tom' to STDOUT.</span></code></pre></figure>
+<h2 id="code">Code</h2>
 
-<p>Check out the <a href="https://jekyllrb.com/docs/home">Jekyll docs</a> for more info on how to get the most out of Jekyll. File all bugs/feature requests at <a href="https://github.com/jekyll/jekyll">Jekyll’s GitHub repo</a>. If you have questions, you can ask them on <a href="https://talk.jekyllrb.com/">Jekyll Talk</a>.</p>
+<p>The code to reproduce all the results can be found <a href="https://github.com/PaccMann/paccmann_rl">here</a>.</p>
 
-<h2 class="post-list-heading">Posts</h2>
-    <ul class="post-list"><li><span class="post-meta">Jan 30, 2020</span>
-        <h3>
-          <a class="post-link" href="/jekyll/update/2020/01/30/welcome-to-jekyll.html">
-            Welcome to Jekyll!
-          </a>
-        </h3></li></ul>
+<p>The components adopted are:</p>
 
-    <p class="rss-subscribe">subscribe <a href="/feed.xml">via RSS</a></p></div>
+<ul>
+  <li><a href="https://github.com/PaccMann/paccmann_datasets">pytoda</a>: implementation of I/O and data-related utilities.</li>
+  <li><a href="https://github.com/PaccMann/paccmann_predictor">paccmann_predictor</a>: multimodal drug sensitivity predictor based on <a href="https://pubs.acs.org/doi/full/10.1021/acs.molpharmaceut.9b00520">our previous paper</a></li>
+  <li><a href="https://github.com/PaccMann/paccmann_omics">paccmann_omics</a>: generative models for omic data.</li>
+  <li><a href="https://github.com/PaccMann/paccmann_chemistry">paccmann_chemistry</a>: generative models for chemical data.</li>
+  <li><a href="https://github.com/PaccMann/paccmann_generator">paccmann_generator</a>: multimodal generative models implementing PaccMann^RL framework.</li>
+</ul>
+
+<h2 id="paccmann-molecules">PaccMann molecules</h2>
+
+<p>We offer the visualization of a selection of molecules generated by PaccMann compared with existing drug-like and/or bioactive compounds at the following links:</p>
+
+<ul>
+  <li><a href="rl/unbiased">Unbiased molecules</a>, a.k.a., not optimized using PaccMann</li>
+  <li>Molecules optmized for <a href="rl/breast.html">breast cancer</a></li>
+  <li>Molecules optmized for <a href="rl/prostate.html">prostate cancer</a></li>
+  <li>Molecules optmized for <a href="rl/lung.html">lung cancer</a></li>
+  <li>Molecules optmized for <a href="rl/autonomic_ganglia.html">neuroblastoma</a></li>
+</ul>
+
+<p>All the visualizations have been produced using <a href="https://chemrxiv.org/articles/Visualization_of_Very_Large_High-Dimensional_Data_Sets_as_Minimum_Spanning_Trees/9698861/1">TMAP</a>.</p>
+
+</div>
 
       </div>
     </main><footer class="site-footer h-card">
@@ -72,7 +92,7 @@
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li class="p-name">PaccMann</li><li><a class="u-email" href="mailto:tte@zurich.ibm.com">tte@zurich.ibm.com</a></li></ul>
+          <li class="p-name">PaccMann</li><li><a class="u-email" href="mailto:tte@zurich.ibm.com, jab@zurich.ibm.com, dow@zurich.ibm.com">tte@zurich.ibm.com, jab@zurich.ibm.com, dow@zurich.ibm.com</a></li></ul>
       </div>
 
       <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/PaccMann"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">PaccMann</span></a></li><li><a href="https://www.twitter.com/IBMResearch"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">IBMResearch</span></a></li></ul>

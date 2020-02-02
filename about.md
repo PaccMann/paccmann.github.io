@@ -4,15 +4,14 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+You can find more info about PaccMann project on our research group [web page](https://www.zurich.ibm.com/paccmann/).
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+If you want to play with PaccMann try the login free [web service](https://ibm.biz/paccmann-aas).
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+Follow our [organization](https://github.com/PaccMann) on GitHub for the latest software updates. 
 
+If you use PaccMann in your research, please consider citing these papers:
 
-[jekyll-organization]: https://github.com/jekyll
+- PaccMann predictor [paper](https://pubs.acs.org/doi/full/10.1021/acs.molpharmaceut.9b00520)
+- PaccMann^RL [paper](https://arxiv.org/abs/1909.05114)
+
