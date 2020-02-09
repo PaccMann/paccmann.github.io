@@ -29,7 +29,7 @@ The components adopted are:
 - [paccmann_predictor](https://github.com/PaccMann/paccmann_predictor): multimodal drug sensitivity predictor based on [our previous paper](https://pubs.acs.org/doi/full/10.1021/acs.molpharmaceut.9b00520)
 - [paccmann_omics](https://github.com/PaccMann/paccmann_omics): generative models for omic data.
 - [paccmann_chemistry](https://github.com/PaccMann/paccmann_chemistry): generative models for chemical data.
-- [paccmann_generator](https://github.com/PaccMann/paccmann_generator): multimodal generative models implementing PaccMann^RL framework.
+- [paccmann_generator](https://github.com/PaccMann/paccmann_generator): multimodal generative models implementing PaccMann<sup>RL</sup> framework.
 
 ## PaccMann molecules
 
