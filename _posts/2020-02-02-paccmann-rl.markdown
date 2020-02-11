@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "PaccMann^RL: Designing anticancer drugs from transcriptomic data via reinforcement learning"
+title:  "PaccMann<sup>RL</sup>: Designing anticancer drugs from transcriptomic data via reinforcement learning"
 date:   2020-02-02 22:45:00 +0100
 categories: paper
 ---
